@@ -302,6 +302,7 @@
 
       document.getElementById('formTitle').innerText = 'Modifier la dépense';
       updateCalculatedRates();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function deleteExpense(id) {
@@ -387,8 +388,8 @@
             </td>
             <td class="py-3 px-4 text-slate-400">${item.startDate || '-'}</td>
             <td class="py-3 px-4 text-right space-x-2">
-              <button onclick="editExpense('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Éditer</button>
-              <button onclick="deleteExpense('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Supprimer</button>
+              <button type="button" onclick="editExpense('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Éditer</button>
+              <button type="button" onclick="deleteExpense('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Supprimer</button>
             </td>
           </tr>
         `;
@@ -490,6 +491,7 @@
       if (!file) return;
 
       const reader = new FileReader();
+      renderAll()
       reader.onload = function(e) {
         try {
           const imported = JSON.parse(e.target.result);
