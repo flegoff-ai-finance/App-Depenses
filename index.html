@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestion des Dépenses Récurrentes</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -30,12 +28,13 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <button onclick="toggleCategoryModal(true)" class="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition border border-slate-600 flex items-center gap-1.5">
+          ⚙️ Catégories
+        </button>
         <button onclick="exportData()" class="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition border border-slate-600 flex items-center gap-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           Exporter
         </button>
         <label class="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition border border-slate-600 cursor-pointer flex items-center gap-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
           Importer
           <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
         </label>
@@ -45,41 +44,39 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-8">
 
-    <!-- KPI / Métriques -->
+    <!-- KPI / Métriques de l'Année -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-sm">
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Mensuel Moyen</p>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Passées (Jan - M-1)</p>
         <div class="flex items-baseline gap-2 mt-2">
-          <span id="kpiMonthly" class="text-2xl font-bold text-white">0,00 €</span>
-          <span class="text-xs text-emerald-400 font-medium">/ mois</span>
+          <span id="kpiPassed" class="text-2xl font-bold text-slate-300">0,00 €</span>
         </div>
-        <p class="text-xs text-slate-500 mt-1">Lissage de toutes les récurrences</p>
+        <p class="text-xs text-slate-500 mt-1">Échéances passées cette année</p>
+      </div>
+
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-sm">
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">À Venir (Mois en cours - Déc)</p>
+        <div class="flex items-baseline gap-2 mt-2">
+          <span id="kpiUpcoming" class="text-2xl font-bold text-amber-400">0,00 €</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Reste à payer d'ici fin d'année</p>
       </div>
 
       <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-sm">
         <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Annuel Projected</p>
         <div class="flex items-baseline gap-2 mt-2">
           <span id="kpiYearly" class="text-2xl font-bold text-indigo-400">0,00 €</span>
-          <span class="text-xs text-indigo-300 font-medium">/ an</span>
         </div>
-        <p class="text-xs text-slate-500 mt-1">Coût global sur 12 mois</p>
-      </div>
-
-      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-sm">
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Compte Principal</p>
-        <div class="flex items-baseline gap-2 mt-2">
-          <span id="kpiMainBank" class="text-2xl font-bold text-emerald-400">-</span>
-        </div>
-        <p id="kpiMainBankSub" class="text-xs text-slate-500 mt-1">Plus fort volume d'engagement</p>
+        <p class="text-xs text-slate-500 mt-1">Cumul 12 mois de l'année</p>
       </div>
 
       <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-sm">
         <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Dépenses Actives</p>
         <div class="flex items-baseline gap-2 mt-2">
-          <span id="kpiCount" class="text-2xl font-bold text-amber-400">0</span>
-          <span class="text-xs text-amber-300 font-medium">lignes</span>
+          <span id="kpiCount" class="text-2xl font-bold text-emerald-400">0</span>
+          <span class="text-xs text-emerald-300 font-medium">lignes</span>
         </div>
-        <p class="text-xs text-slate-500 mt-1">Abonnements & échéances</p>
+        <p class="text-xs text-slate-500 mt-1">Nombre d'engagements</p>
       </div>
     </div>
 
@@ -89,26 +86,25 @@
       <!-- Formulaire d'ajout/édition -->
       <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl h-fit">
         <h2 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
           <span id="formTitle">Ajouter une dépense</span>
         </h2>
 
         <form id="expenseForm" onsubmit="saveExpense(event)" class="space-y-4">
-          <input type="hidden" id="expenseId">
+          <input type="hidden" id="expenseId" value="">
 
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">Titre de la dépense</label>
-            <input type="text" id="title" required placeholder="ex: Assurance Auto, Netflix, Loyer..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+            <input type="text" id="title" required placeholder="ex: Assurance Auto, Netflix..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-medium text-slate-300 mb-1">Montant Exact (€)</label>
-              <input type="number" step="0.01" min="0.01" id="amount" required placeholder="0.00" oninput="updateCalculatedRates()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+              <input type="number" step="0.01" min="0.01" id="amount" required placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-300 mb-1">Fréquence</label>
-              <select id="frequency" onchange="updateCalculatedRates()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+              <select id="frequency" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
                 <option value="monthly">Mensuel</option>
                 <option value="quarterly">Trimestriel</option>
                 <option value="yearly">Annuel</option>
@@ -116,16 +112,15 @@
             </div>
           </div>
 
-          <!-- Aperçu des calculs automatiques -->
-          <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800 text-xs text-slate-400 flex justify-between items-center">
-            <span>Équivalent calculé :</span>
-            <div class="font-medium text-slate-200">
-              <span id="calcMonthly">0 €/mois</span> | <span id="calcYearly">0 €/an</span>
-            </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Catégorie</label>
+            <select id="category" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+              <!-- Dynamique via JS -->
+            </select>
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1">Compte bancaire impacté</label>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Compte bancaire (Interne)</label>
             <select id="bank" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
               <option value="CA">Crédit Agricole (CA)</option>
               <option value="CCF">CCF</option>
@@ -135,7 +130,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1">Prochaine échéance / Date de début</label>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Date de première / prochaine échéance</label>
             <input type="date" id="startDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
           </div>
 
@@ -150,26 +145,17 @@
         </form>
       </div>
 
-      <!-- Graphique d'évolution temporelle -->
+      <!-- Graphique d'évolution par Catégorie -->
       <div class="lg:col-span-2 bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
         <div>
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-            <h2 class="text-lg font-semibold text-white flex items-center gap-2">
-              <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
-              Projection temporelle des flux (12 mois)
-            </h2>
-            <select id="chartFilterBank" onchange="renderChart()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300">
-              <option value="ALL">Tous les comptes</option>
-              <option value="CA">CA seulement</option>
-              <option value="CCF">CCF seulement</option>
-              <option value="Bourso">Bourso seulement</option>
-            </select>
+            <h2 class="text-lg font-semibold text-white">Répartition annuelle par Catégorie</h2>
           </div>
           <div class="relative w-full h-72">
-            <canvas id="timeChart"></canvas>
+            <canvas id="categoryChart"></canvas>
           </div>
         </div>
-        <p class="text-xs text-slate-500 mt-4 text-center">Ce graphique comptabilise les échéances réelles prévues mois par mois selon vos fréquences d'engagement.</p>
+        <p class="text-xs text-slate-500 mt-4 text-center">Ce graphique regroupe le total annuel cumulé prévu pour chaque catégorie.</p>
       </div>
 
     </div>
@@ -177,15 +163,11 @@
     <!-- Liste des Dépenses -->
     <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 class="text-lg font-semibold text-white">Vos abonnements & dépenses récurrentes</h2>
+        <h2 class="text-lg font-semibold text-white">Vos dépenses récurrentes</h2>
         <div class="flex gap-2 w-full sm:w-auto">
           <input type="text" id="searchInput" oninput="renderTable()" placeholder="Rechercher..." class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 w-full sm:w-48">
-          <select id="bankFilter" onchange="renderTable()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-300">
-            <option value="ALL">Tous comptes</option>
-            <option value="CA">CA</option>
-            <option value="CCF">CCF</option>
-            <option value="Bourso">Bourso</option>
-            <option value="Autre">Autre</option>
+          <select id="categoryFilter" onchange="renderTable()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+            <!-- Dynamique JS -->
           </select>
         </div>
       </div>
@@ -195,10 +177,10 @@
           <thead class="text-xs uppercase bg-slate-900/50 text-slate-400 border-b border-slate-700">
             <tr>
               <th class="py-3 px-4">Titre</th>
-              <th class="py-3 px-4">Montant de base</th>
+              <th class="py-3 px-4">Montant</th>
               <th class="py-3 px-4">Fréquence</th>
-              <th class="py-3 px-4">Ramené/mois</th>
-              <th class="py-3 px-4">Compte</th>
+              <th class="py-3 px-4">Ramené / mois</th>
+              <th class="py-3 px-4">Catégorie</th>
               <th class="py-3 px-4">Prochaine Échéance</th>
               <th class="py-3 px-4 text-right">Actions</th>
             </tr>
@@ -212,32 +194,86 @@
 
   </main>
 
+  <!-- Modal Gestion des Catégories -->
+  <div id="categoryModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+      <h3 class="text-lg font-semibold text-white">Gérer les Catégories</h3>
+      <div class="flex gap-2">
+        <input type="text" id="newCategoryInput" placeholder="Nouvelle catégorie..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        <button onclick="addCategory()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-medium text-white">Ajouter</button>
+      </div>
+      <ul id="categoryList" class="divide-y divide-slate-700 max-h-60 overflow-y-auto">
+        <!-- Rempli JS -->
+      </ul>
+      <div class="flex justify-end pt-2">
+        <button onclick="toggleCategoryModal(false)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm text-slate-300">Fermer</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Variables globales
+    // Données par défaut
+    let categories = JSON.parse(localStorage.getItem('categories_data')) || ['Véhicule', 'Abonnements', 'Logement', 'Santé', 'Divers'];
+    
     let expenses = JSON.parse(localStorage.getItem('expenses_data')) || [
-      { id: '1', title: 'Assurance Voiture', amount: 120, frequency: 'quarterly', bank: 'CA', startDate: '2026-11-15' },
-      { id: '2', title: 'Abonnement Téléphone', amount: 19.99, frequency: 'monthly', bank: 'Bourso', startDate: '2026-11-01' },
-      { id: '3', title: 'Taxe Foncière', amount: 1200, frequency: 'yearly', bank: 'CCF', startDate: '2027-10-15' }
+      { id: '1', title: 'Révision Voiture', amount: 250, frequency: 'yearly', category: 'Véhicule', bank: 'CA', startDate: '2026-06-15' },
+      { id: '2', title: 'Netflix', amount: 19.99, frequency: 'monthly', category: 'Abonnements', bank: 'Bourso', startDate: '2026-01-01' }
     ];
 
     let chartInstance = null;
 
-    // Initialisation au chargement
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('startDate').valueAsDate = new Date();
-      updateCalculatedRates();
+      updateCategorySelects();
       renderAll();
     });
 
-    // Sauvegarde & Mise à jour de l'UI
     function renderAll() {
       localStorage.setItem('expenses_data', JSON.stringify(expenses));
+      localStorage.setItem('categories_data', JSON.stringify(categories));
       renderKPIs();
       renderTable();
       renderChart();
     }
 
-    // Calculs de conversion de montant
+    function updateCategorySelects() {
+      const selectForm = document.getElementById('category');
+      const selectFilter = document.getElementById('categoryFilter');
+      
+      selectForm.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      selectFilter.innerHTML = `<option value="ALL">Toutes catégories</option>` + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      
+      const modalList = document.getElementById('categoryList');
+      modalList.innerHTML = categories.map(c => `
+        <li class="py-2 flex justify-between items-center text-sm">
+          <span class="text-slate-200">${c}</span>
+          <button onclick="deleteCategory('${c}')" class="text-rose-400 hover:text-rose-300 text-xs">Supprimer</button>
+        </li>
+      `).join('');
+    }
+
+    function toggleCategoryModal(show) {
+      document.getElementById('categoryModal').classList.toggle('hidden', !show);
+    }
+
+    function addCategory() {
+      const input = document.getElementById('newCategoryInput');
+      const val = input.value.trim();
+      if (val && !categories.includes(val)) {
+        categories.push(val);
+        input.value = '';
+        updateCategorySelects();
+        renderAll();
+      }
+    }
+
+    function deleteCategory(cat) {
+      if (categories.length <= 1) return alert('Conservez au moins une catégorie.');
+      categories = categories.filter(c => c !== cat);
+      updateCategorySelects();
+      renderAll();
+    }
+
     function getNormalizedMonthly(amount, freq) {
       if (freq === 'monthly') return amount;
       if (freq === 'quarterly') return amount / 3;
@@ -252,62 +288,53 @@
       return amount;
     }
 
-    function updateCalculatedRates() {
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
-      const freq = document.getElementById('frequency').value;
-      const monthly = getNormalizedMonthly(amount, freq);
-      const yearly = getNormalizedYearly(amount, freq);
-
-      document.getElementById('calcMonthly').innerText = monthly.toFixed(2) + ' €/mois';
-      document.getElementById('calcYearly').innerText = yearly.toFixed(2) + ' €/an';
-    }
-
-    // Gestion du Formulaire (Ajout / Édition)
+    // Sauvegarder ou Modifier
     function saveExpense(e) {
       e.preventDefault();
       const id = document.getElementById('expenseId').value;
       const title = document.getElementById('title').value;
       const amount = parseFloat(document.getElementById('amount').value);
       const frequency = document.getElementById('frequency').value;
+      const category = document.getElementById('category').value;
       const bank = document.getElementById('bank').value;
       const startDate = document.getElementById('startDate').value;
 
-      if (id) {
-        const index = expenses.findIndex(item => item.id === id);
+      if (id && id !== '') {
+        const index = expenses.findIndex(item => item.id.toString() === id.toString());
         if (index !== -1) {
-          expenses[index] = { id, title, amount, frequency, bank, startDate };
+          expenses[index] = { id, title, amount, frequency, category, bank, startDate };
         }
       } else {
-        const newExpense = {
+        expenses.push({
           id: Date.now().toString(),
-          title, amount, frequency, bank, startDate
-        };
-        expenses.push(newExpense);
+          title, amount, frequency, category, bank, startDate
+        });
       }
 
       resetForm();
       renderAll();
     }
 
+    // ÉDITION CORRIGÉE : Remplissage direct des champs
     function editExpense(id) {
-      const item = expenses.find(e => e.id === id);
+      const item = expenses.find(e => e.id.toString() === id.toString());
       if (!item) return;
 
       document.getElementById('expenseId').value = item.id;
       document.getElementById('title').value = item.title;
       document.getElementById('amount').value = item.amount;
       document.getElementById('frequency').value = item.frequency;
-      document.getElementById('bank').value = item.bank;
+      document.getElementById('category').value = item.category || categories[0];
+      document.getElementById('bank').value = item.bank || 'CA';
       document.getElementById('startDate').value = item.startDate;
 
       document.getElementById('formTitle').innerText = 'Modifier la dépense';
-      updateCalculatedRates();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function deleteExpense(id) {
-      if (confirm('Voulez-vous vraiment supprimer cette dépense ?')) {
-        expenses = expenses.filter(item => item.id !== id);
+      if (confirm('Supprimer cette dépense ?')) {
+        expenses = expenses.filter(item => item.id.toString() !== id.toString());
         renderAll();
       }
     }
@@ -317,78 +344,60 @@
       document.getElementById('expenseId').value = '';
       document.getElementById('startDate').valueAsDate = new Date();
       document.getElementById('formTitle').innerText = 'Ajouter une dépense';
-      updateCalculatedRates();
     }
 
-    // Affichage des KPIs
+    // Calculs Passées vs À venir sur l'année en cours
     function renderKPIs() {
-      const totalMonthly = expenses.reduce((acc, item) => acc + getNormalizedMonthly(item.amount, item.frequency), 0);
-      const totalYearly = expenses.reduce((acc, item) => acc + getNormalizedYearly(item.amount, item.frequency), 0);
+      const currentMonth = new Date().getMonth(); // 0-11
+      let totalPassed = 0;
+      let totalUpcoming = 0;
+      let totalYear = 0;
 
-      document.getElementById('kpiMonthly').innerText = totalMonthly.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-      document.getElementById('kpiYearly').innerText = totalYearly.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-      document.getElementById('kpiCount').innerText = expenses.length;
-
-      // Compte le plus sollicité
-      const bankTotals = {};
       expenses.forEach(item => {
-        const mAmount = getNormalizedMonthly(item.amount, item.frequency);
-        bankTotals[item.bank] = (bankTotals[item.bank] || 0) + mAmount;
+        const yr = getNormalizedYearly(item.amount, item.frequency);
+        totalYear += yr;
+
+        const monthlyVal = getNormalizedMonthly(item.amount, item.frequency);
+        totalPassed += monthlyVal * currentMonth;
+        totalUpcoming += monthlyVal * (12 - currentMonth);
       });
 
-      let mainBank = '-';
-      let maxAmount = 0;
-      for (const [bank, amt] of Object.entries(bankTotals)) {
-        if (amt > maxAmount) {
-          maxAmount = amt;
-          mainBank = bank;
-        }
-      }
-      document.getElementById('kpiMainBank').innerText = mainBank;
-      document.getElementById('kpiMainBankSub').innerText = maxAmount > 0 ? `${maxAmount.toFixed(2)} €/mois` : 'Aucune donnée';
+      document.getElementById('kpiPassed').innerText = totalPassed.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' €';
+      document.getElementById('kpiUpcoming').innerText = totalUpcoming.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' €';
+      document.getElementById('kpiYearly').innerText = totalYear.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + ' €';
+      document.getElementById('kpiCount').innerText = expenses.length;
     }
 
-    // Rendu du tableau
     function renderTable() {
       const tbody = document.getElementById('expenseTableBody');
       const search = document.getElementById('searchInput').value.toLowerCase();
-      const bankFilter = document.getElementById('bankFilter').value;
+      const catFilter = document.getElementById('categoryFilter').value;
 
       const filtered = expenses.filter(item => {
         const matchesSearch = item.title.toLowerCase().includes(search);
-        const matchesBank = bankFilter === 'ALL' || item.bank === bankFilter;
-        return matchesSearch && matchesBank;
+        const matchesCat = catFilter === 'ALL' || item.category === catFilter;
+        return matchesSearch && matchesCat;
       });
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500">Aucune dépense trouvée.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500">Aucune dépense.</td></tr>`;
         return;
       }
 
       const freqLabels = { monthly: 'Mensuel', quarterly: 'Trimestriel', yearly: 'Annuel' };
-      const bankBadges = {
-        CA: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-        CCF: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-        Bourso: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
-        Autre: 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-      };
 
       tbody.innerHTML = filtered.map(item => {
         const mValue = getNormalizedMonthly(item.amount, item.frequency);
-        const badgeClass = bankBadges[item.bank] || bankBadges['Autre'];
-
         return `
-          <tr class="hover:bg-slate-800/50 transition">
+          <tr class="hover:bg-slate-800/50 transition border-b border-slate-700/30">
             <td class="py-3 px-4 font-medium text-white">${item.title}</td>
             <td class="py-3 px-4">${item.amount.toFixed(2)} €</td>
             <td class="py-3 px-4"><span class="text-xs bg-slate-700 px-2 py-1 rounded-md">${freqLabels[item.frequency]}</span></td>
             <td class="py-3 px-4 text-indigo-400 font-medium">${mValue.toFixed(2)} €</td>
-            <td class="py-3 px-4">
-              <span class="text-xs px-2.5 py-1 rounded-full border ${badgeClass}">${item.bank}</span>
-            </td>
+            <td class="py-3 px-4"><span class="text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">${item.category || 'Général'}</span></td>
             <td class="py-3 px-4 text-slate-400">${item.startDate || '-'}</td>
             <td class="py-3 px-4 text-right space-x-2">
-              <button type="button" onclick="editExpense('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium text-xs">Éditer</button>
+              <button type="button" onclick="editExpense('${item.id}')" class="text-indigo-400 hover:text-indigo-300 font-semibold text-xs bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">Éditer</button>
               <button type="button" onclick="deleteExpense('${item.id}')" class="text-rose-400 hover:text-rose-300 font-medium text-xs">Supprimer</button>
             </td>
           </tr>
@@ -396,114 +405,76 @@
       }).join('');
     }
 
-    // Calcul de l'évolution temporelle (Projection 12 mois)
     function renderChart() {
-      const ctx = document.getElementById('timeChart').getContext('2d');
-      const selectedBank = document.getElementById('chartFilterBank').value;
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      const catTotals = {};
 
-      // Générer les 12 prochains mois
-      const months = [];
-      const monthlySums = new Array(12).fill(0);
-      const today = new Date();
-
-      for (let i = 0; i < 12; i++) {
-        const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
-        const monthLabel = d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
-        months.push(monthLabel);
-      }
-
-      const activeExpenses = expenses.filter(item => selectedBank === 'ALL' || item.bank === selectedBank);
-
-      activeExpenses.forEach(item => {
-        const start = item.startDate ? new Date(item.startDate) : new Date();
-
-        for (let i = 0; i < 12; i++) {
-          const currentMonthDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
-          
-          if (item.frequency === 'monthly') {
-            monthlySums[i] += item.amount;
-          } else if (item.frequency === 'quarterly') {
-            const monthDiff = (currentMonthDate.getFullYear() - start.getFullYear()) * 12 + (currentMonthDate.getMonth() - start.getMonth());
-            if (monthDiff >= 0 && monthDiff % 3 === 0) {
-              monthlySums[i] += item.amount;
-            }
-          } else if (item.frequency === 'yearly') {
-            const monthDiff = (currentMonthDate.getFullYear() - start.getFullYear()) * 12 + (currentMonthDate.getMonth() - start.getMonth());
-            if (monthDiff >= 0 && monthDiff % 12 === 0) {
-              monthlySums[i] += item.amount;
-            }
-          }
-        }
+      categories.forEach(c => catTotals[c] = 0);
+      expenses.forEach(item => {
+        const cat = item.category || 'Divers';
+        catTotals[cat] = (catTotals[cat] || 0) + getNormalizedYearly(item.amount, item.frequency);
       });
 
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
+      if (chartInstance) chartInstance.destroy();
 
       chartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
-          labels: months,
+          labels: Object.keys(catTotals),
           datasets: [{
-            label: 'Total prévu des échéances (€)',
-            data: monthlySums,
-            backgroundColor: 'rgba(99, 102, 241, 0.5)',
-            borderColor: 'rgba(99, 102, 241, 1)',
+            data: Object.values(catTotals),
+            backgroundColor: [
+              'rgba(99, 102, 241, 0.8)',
+              'rgba(16, 185, 129, 0.8)',
+              'rgba(245, 158, 11, 0.8)',
+              'rgba(236, 72, 153, 0.8)',
+              'rgba(14, 165, 233, 0.8)',
+              'rgba(168, 85, 247, 0.8)'
+            ],
             borderWidth: 2,
-            borderRadius: 6
+            borderColor: '#1e293b'
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#94a3b8' }
-            },
-            x: {
-              grid: { display: false },
-              ticks: { color: '#94a3b8' }
-            }
+            legend: { position: 'bottom', labels: { color: '#94a3b8' } }
           }
         }
       });
     }
 
-    // Exporter les données au format JSON
     function exportData() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expenses, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `depenses_export_${new Date().toISOString().slice(0,10)}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
+      const data = { expenses, categories };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `depenses_export_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
 
-    // Importer les données depuis un fichier JSON
     function importData(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
-      renderAll()
       reader.onload = function(e) {
         try {
           const imported = JSON.parse(e.target.result);
-          if (Array.isArray(imported)) {
+          if (imported.expenses) {
+            expenses = imported.expenses;
+            if (imported.categories) categories = imported.categories;
+          } else if (Array.isArray(imported)) {
             expenses = imported;
-            renderAll();
-            alert('Données importées avec succès !');
-          } else {
-            alert('Le fichier importé n\'a pas un format valide.');
           }
+          updateCategorySelects();
+          renderAll();
+          alert('Données importées !');
         } catch (err) {
-          alert('Erreur lors de la lecture du fichier JSON.');
+          alert('Erreur d\'importation.');
         }
       };
       reader.readAsText(file);
